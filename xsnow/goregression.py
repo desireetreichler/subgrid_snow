@@ -19,7 +19,6 @@ import holoviews as hv, datashader as ds, geoviews as gv, geoviews.tile_sources 
 from holoviews.operation.datashader import rasterize
 hv.extension('bokeh')
 from xsnow.goplot import final_histogram,threshold,RMSE
-from msilib.schema import Class
 import xarray as xr
 import pandas as pd
 from tqdm import tqdm
@@ -31,7 +30,6 @@ import pickle
 from typing import Dict
 from scipy.stats import gamma
 import shap
-from xsnow.godh import load_gdf,get_value_point
 from scipy.spatial import cKDTree
 import numpy as np
 from xsnow.test_ import check_by_finse_lidar, produce_validation_from_nve
@@ -348,7 +346,7 @@ def quantile_mapping_xr(data, scaling, split_f='sd_predict_dtm1', split=0, dem='
     dem (str): The name of the variable in the dataset to apply quantile mapping to.
 
     Returns:
-    xr.Dataset: The dataset with quantile mapping applied to the specified variable.
+    xr.Dataset: The dataset with quantile mapping applied to the specified variable. with name "_"
     """
 
     if not isinstance(data, xr.Dataset):
@@ -465,8 +463,6 @@ def match_frost_station(station_df,sd,threshold_distance=100):
     return result_df
 
 
-
-from msilib.schema import Class
 import xarray as xr
 import pandas as pd
 from datetime import datetime,date, timedelta
@@ -672,7 +668,7 @@ class Snow_Regressor:
         '''
 
         if df_add is None:
-            df_add = pd.read_csv(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\all_segments.csv', encoding='utf-8')
+            df_add = pd.read_csv(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/all_segments.csv', encoding='utf-8')
             df_add = df_add.drop_duplicates(subset=['latitude', 'longitude', 'date','h_te_best_fit'], keep='last')
         if add_columns is None:
             add_columns = ['cloud_flag_atm','snr','terrain_slope','h_canopy','h_te_skew','urban_flag', 'night_flag','h_te_uncertainty','brightness_flag','h_te_interp']
@@ -1340,9 +1336,9 @@ class Snow_Regressor:
     def generate_validation_df_nve(self):
 
         # List of file paths
-        file_paths = [r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\senorge\sd_2008.nc', 
-                    r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\senorge\sd_2009.nc',
-                    r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\senorge\sd_2020.nc']
+        file_paths = [r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/senorge/sd_2008.nc', 
+                    r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/senorge/sd_2009.nc',
+                    r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/senorge/sd_2020.nc']
 
         # Load datasets
         se = [xr.open_dataset(fp) for fp in file_paths]
@@ -1351,8 +1347,8 @@ class Snow_Regressor:
         senorge = ERA5(se_all)
         
         # generate validation df
-        df_era_08 = pd.read_csv(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\snowdepth_national_20080401_interp_era.csv')
-        sd_nve_08 = xdem.DEM(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\nve_08_merge_m.tif')
+        df_era_08 = pd.read_csv(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/snowdepth_national_20080401_interp_era.csv')
+        sd_nve_08 = xdem.DEM(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/nve_08_merge_m.tif')
         
         df_nve_08 = produce_validation_from_nve(df_era_08,sd_nve_08)
         df_nve_08['date'] = ('2008-04-01')
@@ -1360,8 +1356,8 @@ class Snow_Regressor:
         df_nve_08.to_csv('df_nve_08.csv',index=False)
 
 
-        df_era_09 = pd.read_csv(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\snowdepth_national_20090401_interp_era.csv')
-        sd_nve_09 = xdem.DEM(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\nve_09_merge_m.tif')
+        df_era_09 = pd.read_csv(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/snowdepth_national_20090401_interp_era.csv')
+        sd_nve_09 = xdem.DEM(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/nve_09_merge_m.tif')
         df_nve_09 = produce_validation_from_nve(df_era_09,sd_nve_09)
         df_nve_09['date'] = ('2009-04-01')
         df_nve_09 = senorge.coupling_dataframe_sde_by_month_senorge(df_nve_09,'%Y-%m-%d')
@@ -1465,14 +1461,14 @@ class Snow_Regressor:
         '''
 
         if era_montly is None:
-            era_montly = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\EAR5_land\monthly_data_08_22.nc'
+            era_montly = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/EAR5_land/monthly_data_08_22.nc'
         # update others
         era = ERA5(era_montly)
         era.cal_wind_aspect_factor_yearly()
         era.coupling_dataframe_other_by_date(self.sc)
 
         if era_daily is None:
-            era_daily = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\EAR5_land\era5.nc'
+            era_daily = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/EAR5_land/era5.nc'
         # update sd_era
         era = ERA5(era_daily)
         self.sc = era.coupling_dataframe_sde_by_date(self.sc)
@@ -1886,7 +1882,7 @@ class Snow_Distributor:
         if correction in ['qm','qm_original']:
             # open quantiles
             with open('adjust_factor_08_case6.pkl', 'rb') as f:
-                adjust_factor = pickle.load(f)
+                adjust_factor =  pd.read_pickle(f)
             # correct it. Useful for distribution error.
             df = self.offset_adjustment_quantile_mapping(df,correction,adjust_factor=adjust_factor)
         
@@ -2164,7 +2160,7 @@ class Snow_Distributor:
         dem.write_crs("EPSG:4326", inplace=True)
         dem.to_raster(raster_path=path, driver="COG")
 
-    def get_lake_mask(self,timeseries=None,threshold_slope=0.45,threshold_size=175,distance=4) -> xr.DataArray:
+    def get_lake_mask(self,timeseries=None,threshold_slope=0.6,threshold_size=100,distance=4) -> xr.DataArray:
 
         '''
         threshold_size # Define the minimum area criteria for lakes
@@ -2187,7 +2183,7 @@ class Snow_Distributor:
 
         # Label connected regions in the lake mask
         labeled_mask = label(lake_mask)
-        labeled_mask = expand_labels(labeled_mask,distance=4)
+        labeled_mask = expand_labels(labeled_mask,distance=distance)
 
         # Compute properties of labeled regions
         region_props = regionprops(labeled_mask)
@@ -2207,13 +2203,17 @@ class Snow_Distributor:
         
         return lake_mask_da
 
-    def mask_out_lake(self,mask=None,
+    def mask_out_lake(self,
+                      mask=None,
                       is_plot=False,
                       threshold_slope=0.6,
                       threshold_size=100,
                       variable=None):
         '''
         mask: Xarray dataarray
+        threshold_slope: float
+        threshold_size: int
+        variable: list
         '''
 
         if mask is None:

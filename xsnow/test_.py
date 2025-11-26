@@ -103,12 +103,12 @@ def check_by_finse_lidar(sc,shift_px=(-0.5,1.128),dst_res=(1,1)):
     '''
 
     ## Lidar North
-    fid_lidar_n =r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\fieldwork\Hardangervidda_2022_winter\data\processed_2022-03-11_HardangerL1\2022-03-11_HardangerL1_North_raster_1m.tif'
+    fid_lidar_n =r'/uio/hypatia/geofag-felles/projects/snowdepth/fieldwork/Hardangervidda_2022_winter/data/processed_2022-03-11_HardangerL1/2022-03-11_HardangerL1_North_raster_1m.tif'
     ## Lidar South
-    fid_lidar_s = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\fieldwork\Hardangervidda_2022_winter\data\processed_2022-03-11_HardangerL1\2022-03-11_HardangerL1_South_raster_1m.tif'
+    fid_lidar_s = r'/uio/hypatia/geofag-felles/projects/snowdepth/fieldwork/Hardangervidda_2022_winter/data/processed_2022-03-11_HardangerL1/2022-03-11_HardangerL1_South_raster_1m.tif'
     ## DTM1 
-    #r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\fieldwork\Hardangervidda_2022_winter\dtm1\data\dtm1_33_113_119.tif'
-    fid_dtm1 = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\data\DEM\Norway\DTM1_UTM33\DTM1_11-11\33-113-119.tif'
+    #r'/uio/hypatia/geofag-felles\projects\snowdepth\fieldwork\Hardangervidda_2022_winter\dtm1\data\dtm1_33_113_119.tif'
+    fid_dtm1 = r'/uio/hypatia/geofag-felles/projects/snowdepth/data/DEM/Norway/DTM1_UTM33/DTM1_11-11/33-113-119.tif'
 
     grid_nn2000 = xdem.DEM('no_kv_HREF2018B_NN2000_EUREF89.tif')
 
@@ -140,7 +140,7 @@ def produce_validation_from_nve(raw_df,sd_nve):
     
     if sd_nve is None:
         # 2008 NVE
-        sd_nve = xdem.DEM(r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\nve_08_merge_m.tif')
+        sd_nve = xdem.DEM(r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/nve_08_merge_m.tif')
     df_sub = load_gdf(raw_df,sd_nve)
     sd_nve_10 = sd_nve.reproject(dst_res = (10,10))
     sd_nve_20 = sd_nve.reproject(dst_res = (20,20))

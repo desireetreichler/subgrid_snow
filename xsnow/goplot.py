@@ -434,8 +434,8 @@ def sum_to_json(done_csv,crs='EPSG:32633'):
     '''
     input a dataframe, which contains 'geometry' columns under crs=32633:
 
-    folder = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\output_xdems_dem10_SRTM'
-    done_csv = pd.read_csv(folder+'\\sum_.csv')
+    folder = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/output_xdems_dem10_SRTM'
+    done_csv = pd.read_csv(folder+'/sum_.csv')
 
     output a json, which could be plot by plotly
     '''
@@ -660,13 +660,13 @@ def plot_all_hist_sf(df_,std=3,perc_t=99,window=(-10,10),range=(-10,10)):
 
         # List of tuples (column name, DEM type, Correction type)
         data_sources = [
-            ('dh_after_dtm10', 'DTM10', 'Bias-corrected'),
+            ('dh_reg_dtm10', 'DTM10', 'Bias-corrected'),
             ('dh_before_dtm10', 'DTM10', 'Raw'),
-            ('dh_after_dtm1', 'DTM1', 'Bias-corrected'),
+            ('dh_reg_dtm1', 'DTM1', 'Bias-corrected'),
             ('dh_before_dtm1', 'DTM1', 'Raw'),
-            ('dh_after_cop30', 'COP30', 'Bias-corrected'),
+            ('dh_reg_cop30', 'COP30', 'Bias-corrected'),
             ('dh_before_cop30', 'COP30', 'Raw'),
-            ('dh_after_fab', 'FAB', 'Bias-corrected'),
+            ('dh_reg_fab', 'FAB', 'Bias-corrected'),
             ('dh_before_fab', 'FAB', 'Raw'),
         ]
 
@@ -679,15 +679,17 @@ def plot_all_hist_sf(df_,std=3,perc_t=99,window=(-10,10),range=(-10,10)):
             })
             data_to_combine.append(temp_df)
         df_combined = pd.concat(data_to_combine, ignore_index=True)
+
         # remove Elevation difference above 10 m
         df_combined = df_combined[df_combined['Elevation difference [m]'].abs() <= 10]
         # Plot violin plot in a separate figure
         plt.figure()
         sns.set_theme(style="whitegrid")
-        ax = sns.violinplot(data=df_combined, x="DEM", y="Elevation difference [m]", hue="Type", split=True, inner="quart")
+        ax = sns.violinplot(data=df_combined, y="DEM", x="Elevation difference [m]", hue="Type", cut=0, split=True, inner="quart",native_scale=True)
         legend = ax.legend()
+        sns.move_legend(ax, "center right")
         legend.set_title('')
-        ax.set_ylim(-7,7)
+        ax.set_xlim(-7,7)
  
         plt.savefig("violin_plot.png",dpi=600)
 

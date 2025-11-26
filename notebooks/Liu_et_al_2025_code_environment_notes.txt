@@ -1,0 +1,10 @@
+To reproduce the environment used for the revisions of the Liu et al. 2025 paper, use the adjusted environment here without geoutils and xdem. 
+
+Then, add geoutils, xdem, xsnow - but caution, old versions are required!  (local clones in the snowdepth project folder)     
+- geoutils==0.0.10
+- xdem==0.0.7
+- xsnow - the version of liuh886/subgrid_snow:main. 
+
+Possibly, also netcdf5 and h5netcdf need to be added to the environment.
+
+For the calibration in one of the original notebooks, rioxarray is needed -> but this caused incompatibilities, thus there is an updated notebook that runs without this library. 

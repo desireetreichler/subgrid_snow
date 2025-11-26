@@ -20,33 +20,21 @@ The funcition and workflow related to DataFrame x DEM. e.g.
 
 import xarray as xr
 from rasterio.enums import Resampling
-from audioop import bias
 import contextlib
-from dataclasses import asdict
-from distutils.log import error
-from os import stat
-from sys import stderr
-from unittest import result
 import pandas as pd
 from pandas import DataFrame
 import geopandas as gpd
 from geopandas.geodataframe import GeoDataFrame
 import numpy as np
-from sympy import false, true
-from traitlets import Bool
 import matplotlib.pyplot as plt
 import pprint
-
 import xdem
-from xdem.dem import DEM 
-
+from xdem.dem import DEM
 import pyproj
 from pyproj import Transformer
-
 import shapely.speedups
 shapely.speedups.enable()
 from shapely.geometry import Point,Polygon,LineString
-
 from xsnow.goplot import normal_statistics, final_histogram
 from xsnow.misc import extend_geosegment, interp_points, points_to_footprint,poly_zonal_stats,dem_shift,gdf_shift,df_sampling_from_dem
 from noisyopt import minimizeCompass
@@ -884,7 +872,7 @@ def produc_to_csv(fid,sc_gdf_subset,sf_gdf_subset,grid,folder,dst_res=None,
     from functools import partial
     from p_tqdm import p_uimap
     from xsnow.godh import yield_gdf,sc_sf_subset_dem
-    folder = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\output_xdem_pts'
+    folder = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/output_xdem_pts'
     
     # Warening ! Clean the folder or creat a new folder before running ! 
     # Oterwise it is going to append the result to old results by default !

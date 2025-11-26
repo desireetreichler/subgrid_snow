@@ -1,12 +1,11 @@
-from sympy import E, N
 import xdem
 from xdem.dem import DEM
 import numpy as np
 import geopandas as gpd
 from collections import abc
 from geopandas.geodataframe import GeoDataFrame
-from geocube.api.core import make_geocube
-from geocube.rasterize import rasterize_image
+#from geocube.api.core import make_geocube
+#from geocube.rasterize import rasterize_image
 from scipy import ndimage
 from geoutils import spatial_tools
 import pyproj
@@ -17,7 +16,6 @@ import matplotlib.pyplot as plt
 from rasterstats import zonal_stats
 from shapely.geometry import LineString,Point
 from shapely.wkt import loads
-import copy
 import rasterio as rio
 from shapely.geometry.polygon import Polygon
 import shapely.wkt
@@ -455,7 +453,7 @@ def df_clip_by(sf,poly_fid,crs=4326):
 
     '''
 
-    # poly_fid = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\Norway_shapefile\border_no_wgs84.gpkg'
+    # poly_fid = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/Norway_shapefile/border_no_wgs84.gpkg'
     import geopandas as gpd
     from shapely.geometry import Point
 
@@ -735,6 +733,11 @@ def evaluate_difference(dataset1, dataset2):
     return correlation, ksd, r2, rmse
 
 def temporal_statistic(array1, array2, time_1, time_2):
+    '''
+    Calculate the temporal statistics between two time series arrays.
+    
+    '''
+
     # Convert time arrays to a common compatible type (numpy datetime64)
     time_1 = np.asarray(time_1, dtype='datetime64')
     time_2 = np.asarray(time_2, dtype='datetime64')

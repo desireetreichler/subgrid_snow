@@ -35,7 +35,7 @@ def produce_pts_2022(new_df,date='2022-03-01'):
         new_df['h_te_best_fit'] = new_df['z']
 
     # Coulpe daily and monthly ERA5 data
-    era_monthly = r'\\hypatia.uio.no\lh-mn-geofag-felles\projects\snowdepth\zhihaol\data\EAR5_land\monthly_data_08_22.nc'
+    era_monthly = r'/uio/hypatia/geofag-felles/projects/snowdepth/zhihaol/data/EAR5_land/monthly_data_08_22.nc'
     era = ERA5(era_monthly)
     era.cal_wind_aspect_factor_yearly()
     new_df = era.coupling_dataframe_single_date(new_df,date=date)
