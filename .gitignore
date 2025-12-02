@@ -5,14 +5,23 @@
 data/
 results/
 
+# files related to local setup
+notes/
+environment/environment_nopip*
+environment/pip_requirements*
+
+
 # Temporary files
 *. tmp
 *. log
-xsnow/__pycache__/
+xsnow/*pycache*/
 . ipynb_checkpoints/
 *.py[cod]
 *$py.class
 *.Thumbs.db
+
+# egg files
+xsnow.egg-info/
 
 # pyenv
 *.python-version
