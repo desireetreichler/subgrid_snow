@@ -177,11 +177,15 @@ def regression_xgboost(dtrain,
     -----------
     dtrain : xgboost.DMatrix
         Training data.
+    dtest : xgboost.DMatrix
+        Test/validation data.
     regression : str, optional (default='quantile_regression')
     alpha : list of float, optional (default=[0.05, 0.25, 0.5, 0.75, 0.95])
         Quantile levels to use for quantile regression.
     **params : dict, optional
         Additional parameters to pass to the XGBoost regressor.
+    evals_result : dict
+        Dictionary containing evaluation metrics for each iteration.
 
     Returns:
     --------
@@ -195,12 +199,16 @@ def regression_xgboost(dtrain,
         params['quantile_alpha'] = alpha
         params['tree_method'] = 'hist'
 
+    # Create dictionary to store evaluation results
+    evals_result = {}
+
     # Fit the regressor to the training set
     xg_reg = xgb.train(params=params,
                        dtrain=dtrain,
                        num_boost_round=params.get('n_estimators', 400),  # Use the value from params or default to 300
                        early_stopping_rounds=params.get('early_stopping_rounds', 25),
                        evals=[(dtrain, "Train"), (dtest, "Test")],
+                       evals_result=evals_result,  # ADDED THIS LINE
                        verbose_eval=params.get('verbose_eval', False))
 
     # Predict the labels of the test set: preds
@@ -221,7 +229,7 @@ def regression_xgboost(dtrain,
     print('Validation R-Square:', r_s)
     print("Validation NMAD: %f" % (nmad))
 
-    return xg_reg
+    return xg_reg, evals_result
 
 def regression_task(new_df_era, 
                     list_regressor, 
@@ -986,9 +994,17 @@ class Snow_Regressor:
                                        feature_col=v_x,
                                        test_size=0.2)
             params = self.params
-            xg_reg_height = regression_xgboost(X_height,X_height_t,**params)
-            xg_reg_openness = regression_xgboost(X_o,X_o_t,**params)
-            xg_reg_h = regression_xgboost(X_h,X_h_t,**params)
+            # Train models and store evaluation results separately
+            xg_reg_height, evals_result_height = regression_xgboost(X_height, X_height_t, **params)
+            xg_reg_openness, evals_result_openness = regression_xgboost(X_o, X_o_t, **params)
+            xg_reg_h, evals_result_h = regression_xgboost(X_h, X_h_t, **params)
+            
+            # Store all evaluation results in a dictionary
+            self.evals_result = {
+                'height': evals_result_height,
+                'openness': evals_result_openness,
+                'h_canopy': evals_result_h
+            }
 
             if regressor_name:
                 xg_reg_height.save_model(regressor_name[0])
@@ -1063,7 +1079,10 @@ class Snow_Regressor:
                                        test_size=0.2,
                                        weight_col=weight)
             params = self.params
-            xg_reg = regression_xgboost(dtrain,dtest,regression='mae',**params)
+            xg_reg, evals_result = regression_xgboost(dtrain,dtest,regression='mae',**params)
+            # Store the evaluation results as an instance variable
+            self.evals_result = evals_result
+
             if regressor_name:
                 xg_reg.save_model(regressor_name)
 
@@ -1226,7 +1245,8 @@ class Snow_Regressor:
                                         test_size=0.2,
                                         weight_col=weight,
                                         add=add)
-            xg_reg = regression_xgboost(dtrain, dtest, regression=regression, alpha=alpha, **params)
+            xg_reg, evals_result = regression_xgboost(dtrain, dtest, regression=regression, alpha=alpha, **params)
+            self.evals_result = evals_result # store training evaluation
             if regressor_name:
                 xg_reg.save_model(regressor_name)
         else:

@@ -14,7 +14,7 @@ environment/pip_requirements*
 # Temporary files
 *. tmp
 *. log
-xsnow/*pycache*/
+xsnow/__pycache__/
 . ipynb_checkpoints/
 *.py[cod]
 *$py.class
