@@ -551,23 +551,146 @@ class Snow_Regressor:
 
 
     def set_qc_paras(self,sf_qc=None,sc_qc=None):
+        """
+        Set quality control parameters for snow-free and snow-covered data.
+        Automatically detects DEM keys from column names following the pattern:
+        - Snow-free: 'dh_after_{dem}'
+        - Snow-covered: 'sd_correct_{dem}'
+        
+        Parameters:
+        -----------
+        sf_qc : dict, optional
+            Custom QC filters for snow-free data, keyed by DEM name
+        sc_qc : dict, optional
+            Custom QC filters for snow-covered data, keyed by DEM name
+        """
 
         if sf_qc is None:
-            #self.sf_qc = {'dtm1':' abs(dh_after_dtm1) < 10 and brightness_flag == 0',
-            #              'dtm10':'abs(dh_after_dtm10) < 10 and brightness_flag == 0',
-            #              'cop30':'abs(dh_after_cop30) < 10 and brightness_flag == 0',
-            #              'fab':'abs(dh_after_fab) < 10 and brightness_flag == 0'}
-            self.sf_qc = {'dtm1':'abs(dh_after_dtm10) < 10 & abs(dh_after_dtm1) < 10 & abs(dh_after_cop30) < 20 & abs(dh_after_fab) < 20 & brightness_flag == 0',
-                          'dtm10':'abs(dh_after_dtm10) < 10 & abs(dh_after_dtm1) < 10 & abs(dh_after_cop30) < 20 & abs(dh_after_fab) < 20 & brightness_flag == 0',
-                          'cop30':'abs(dh_after_dtm10) < 10 & abs(dh_after_dtm1) < 10 & abs(dh_after_cop30) < 20 & abs(dh_after_fab) < 20 & brightness_flag == 0',
-                          'fab':'abs(dh_after_dtm10) < 10 & abs(dh_after_dtm1) < 10 & abs(dh_after_cop30) < 20 & abs(dh_after_fab) < 20 & brightness_flag == 0'}
+            self.sf_qc = {}
+            
+            # Auto-detect DEM keys from 'dh_after_*' columns in snow-free data
+            dh_columns = [col for col in self.sf.columns if col.startswith('dh_after_')]
+            
+            if not dh_columns:
+                print("Warning: No 'dh_after_*' columns found in snow-free data. Cannot set default QC.")
+                return
+            
+            # Track missing columns
+            missing_columns = []
+            
+            for dh_col in dh_columns:
+                # Extract DEM key from column name
+                dem_key = dh_col.replace('dh_after_', '')
+                
+                # Check which columns are available
+                has_n_photons = 'n_te_photons' in self.sf.columns
+                has_uncertainty = 'h_te_uncertainty' in self.sf.columns
+                has_brightness = 'brightness_flag' in self.sf.columns
+                
+                # Track missing optional columns
+                if not has_n_photons:
+                    missing_columns.append('n_te_photons')
+                if not has_uncertainty:
+                    missing_columns.append('h_te_uncertainty')
+                if not has_brightness:
+                    missing_columns.append('brightness_flag')
+                
+                # Build QC filter based on available columns
+                qc_conditions = []
+                
+                if has_n_photons:
+                    qc_conditions.append('(n_te_photons > 10)')
+                if has_uncertainty:
+                    qc_conditions.append('(h_te_uncertainty < 50)')
+                if has_brightness:
+                    qc_conditions.append('(brightness_flag == 0)')
+                
+                # Always include elevation difference filter
+                qc_conditions.append(f'(-10 < {dh_col} < 10)')
+                
+                # Combine conditions with '&'
+                self.sf_qc[dem_key] = ' & '.join(qc_conditions)
+            
+            # Only print if there are warnings
+            if missing_columns:
+                unique_missing = list(set(missing_columns))
+                print(f"⚠️ Warning: The following columns were not found in snow-free data: {unique_missing}")
+                print(f"   QC filters created without these columns.")
+                print("\n   Snow-free QC parameters (sf_qc):")
+                for dem_key, qc_filter in self.sf_qc.items():
+                    print(f"   {dem_key}: {qc_filter}")
+        else:
+            self.sf_qc = sf_qc
         
-        # set cutting-out value
-        if sf_qc is None:
-            self.sc_qc = {'dtm1':f'(-0.1 < sd_correct_dtm1 < 8) & subset_te_flag == 5 & n_te_photons > 10 & slope < 45 & abs(tpi_9) < 12 & {self.era} < 15',
-                        'dtm10':f'(-0.1 < sd_correct_dtm10 < 8) & subset_te_flag == 5 & n_te_photons > 10 & slope < 45 & abs(tpi_9) < 12 & {self.era} < 15',
-                        'cop30':f'(-0.5 < sd_correct_cop30 < 8) & subset_te_flag == 5 & n_te_photons > 10 & slope < 45 & abs(tpi_9) < 12 & {self.era} < 15',
-                        'fab':f'(-0.5 < sd_correct_fab < 8) & subset_te_flag == 5 & n_te_photons > 10 & slope < 45 & abs(tpi_9) < 12 & {self.era} < 15'}
+        if sc_qc is None:
+            self.sc_qc = {}
+            
+            # Auto-detect DEM keys from 'sd_correct_*' columns in snow-covered data
+            sd_columns = [col for col in self.sc.columns if col.startswith('sd_correct_')]
+            
+            if not sd_columns:
+                print("⚠️ Warning: No 'sd_correct_*' columns found in snow-covered data. Cannot set default QC.")
+                return
+            
+            # Track missing columns
+            missing_columns = []
+            
+            for sd_col in sd_columns:
+                # Extract DEM key from column name
+                dem_key = sd_col.replace('sd_correct_', '')
+                
+                # Check which columns are available
+                has_subset_flag = 'subset_te_flag' in self.sc.columns
+                has_n_photons = 'n_te_photons' in self.sc.columns
+                has_slope = 'slope' in self.sc.columns
+                has_tpi = 'tpi_9' in self.sc.columns
+                has_era = hasattr(self, 'era') and self.era in self.sc.columns
+                
+                # Track missing optional columns
+                if not has_subset_flag:
+                    missing_columns.append('subset_te_flag')
+                if not has_n_photons:
+                    missing_columns.append('n_te_photons')
+                if not has_slope:
+                    missing_columns.append('slope')
+                if not has_tpi:
+                    missing_columns.append('tpi_9')
+                if not has_era:
+                    missing_columns.append(self.era if hasattr(self, 'era') else 'sde_era')
+                
+                # Build QC filter based on available columns
+                qc_conditions = []
+                
+                # Snow depth range (adjust lower bound for different DEMs)
+                lower_bound = -0.5 if dem_key.lower() in ['cop30', 'fab'] else -0.1
+                qc_conditions.append(f'({lower_bound} < {sd_col} < 8)')
+                
+                if has_subset_flag:
+                    qc_conditions.append('(subset_te_flag == 5)')
+                if has_n_photons:
+                    qc_conditions.append('(n_te_photons > 10)')
+                if has_slope:
+                    qc_conditions.append('(slope < 45)')
+                if has_tpi:
+                    qc_conditions.append('(abs(tpi_9) < 12)')
+                if has_era:
+                    qc_conditions.append(f'({self.era} < 15)')
+                
+                # Combine conditions with '&'
+                self.sc_qc[dem_key] = ' & '.join(qc_conditions)
+            
+            # Only print if there are warnings
+            if missing_columns:
+                unique_missing = list(set(missing_columns))
+                print(f"⚠️ Warning: The following columns were not found in snow-covered data: {unique_missing}")
+                print(f"   QC filters created without these columns.")
+                print("\n   Snow-covered QC parameters (sc_qc):")
+                for dem_key, qc_filter in self.sc_qc.items():
+                    print(f"   {dem_key}: {qc_filter}")
+        else:
+            self.sc_qc = sc_qc
+
+
 
     def set_default_params(self,
                            params=None,
@@ -863,6 +986,7 @@ class Snow_Regressor:
     def plot_hist_correction(self,
                              ax=None,
                              dem='dtm1',  
+                             data = 'sf',   # new, to let user choose sf or sc
                              raw_dh=None,
                              coreg_dh=None,
                              cor_dh=None,
@@ -871,22 +995,53 @@ class Snow_Regressor:
                              window=None):
         '''
         print hist to show coreg vs correction vs raw  
+        Parameters:
+        -----------
+        data : str, optional (default='sf')
+            Which dataset to plot:
+            - 'sf': snow-free data (elevation differences)
+            - 'sc': snow-covered data (snow depths)
+        dem : str
+            DEM identifier (e.g., 'HMA', 'COP30')
         '''
+         # Select dataframe based on data parameter
+        if data == 'sf':
+            df = self.sf
+            # Snow-free data: elevation differences
+            if raw_dh is None:
+                raw_dh = f'dh_before_{dem}'
+            if coreg_dh is None:          
+                coreg_dh = f'dh_after_{dem}'
+            if cor_dh is None:
+                cor_dh = f'dh_reg_{dem}'
+        elif data == 'sc':
+            df = self.sc
+            # Snow-covered data: snow depths
+            if raw_dh is None:
+                raw_dh = f'snowdepth_{dem}'
+            if coreg_dh is None:
+                coreg_dh = f'pred_correct_{dem}'  # Predicted bias
+            if cor_dh is None:
+                cor_dh = f'sd_correct_{dem}'  # Corrected snow depth
+        else:
+            raise ValueError(f"data must be 'sf' or 'sc', got '{data}'")
 
-        if raw_dh is None:
-            raw_dh = f'dh_before_{dem}'
-        if coreg_dh is None:          
-            coreg_dh = f'dh_after_{dem}'
-        if cor_dh is None:
-            cor_dh = f'dh_reg_{dem}'
+        # Check if raw_dh column exists
+        if raw_dh in df.columns:
+            dH_ref = df[raw_dh]
+            legend = ['After coreg', 'After bias-correction', 'Raw']
+        else:
+            dH_ref = None
+            legend = ['After coreg', 'After bias-correction']
+
         if ax is None:
             fig,ax = plt.subplots(figsize=(7,5))
 
         final_histogram(self.sf[coreg_dh],
                         self.sf[cor_dh],
-                        dH_ref=self.sf[raw_dh],
+                        dH_ref=dH_ref,
                         ax=ax,
-                        legend=['After coreg','After bias-correction','Raw'],
+                        legend=legend,
                         range=(-10,10),
                         perc_t=perc_t,
                         std_t = std_t,
