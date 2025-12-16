@@ -19,6 +19,7 @@ xsnow/__pycache__/
 *.py[cod]
 *$py.class
 *.Thumbs.db
+*cpython-39*
 
 # egg files
 xsnow.egg-info/

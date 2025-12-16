@@ -1,7 +1,6 @@
 from typing_extensions import Self
 import pandas as pd
 import numpy as np
-import xgboost as xgb
 from sklearn.model_selection import train_test_split # split data into training and testing data
 from sklearn.model_selection import GridSearchCV # cross validation
 from sklearn.metrics import mean_squared_error
@@ -994,15 +993,29 @@ class Snow_Regressor:
                              std_t = None,
                              window=None):
         '''
-        print hist to show coreg vs correction vs raw  
+        Plot histogram comparison of coregistration and bias correction effects.
+        
         Parameters:
         -----------
-        data : str, optional (default='sf')
-            Which dataset to plot:
-            - 'sf': snow-free data (elevation differences)
-            - 'sc': snow-covered data (snow depths)
-        dem : str
-            DEM identifier (e.g., 'HMA', 'COP30')
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. If None, creates new figure. Default: None
+        dem : str, optional
+            DEM identifier (e.g., 'HMA', 'COP30', 'dtm1'). Default: 'dtm1'
+        data : str, optional
+            Dataset to plot: 'sf' (snow-free) or 'sc' (snow-covered). Default: 'sf'
+        raw_dh : str, optional
+            Column name for raw data. If None, auto-detected from dem and data type.
+        coreg_dh : str, optional
+            Column name for coregistered data. If None, auto-detected.
+        cor_dh : str, optional
+            Column name for bias-corrected data. If None, auto-detected.
+        perc_t : float, optional
+            Percentile threshold for outlier filtering (0-100). Default: 100 (disabled)
+        std_t : float, optional
+            Standard deviation threshold for outlier filtering. Default: None
+        window : tuple, optional
+            Data range as (min, max) in meters. Overrides perc_t if provided.
+    
         '''
          # Select dataframe based on data parameter
         if data == 'sf':
@@ -1037,12 +1050,17 @@ class Snow_Regressor:
         if ax is None:
             fig,ax = plt.subplots(figsize=(7,5))
 
-        final_histogram(self.sf[coreg_dh],
-                        self.sf[cor_dh],
+        if window is None:
+            range = (-10,10)
+        else:
+            range = window
+
+        final_histogram(df[coreg_dh],
+                        df[cor_dh],
                         dH_ref=dH_ref,
                         ax=ax,
                         legend=legend,
-                        range=(-10,10),
+                        range=range,
                         perc_t=perc_t,
                         std_t = std_t,
                         window=window)

@@ -184,7 +184,9 @@ def final_histogram(
         if nmad:
             ax.text(0.70, 0.30, 'NMAD: ' + ('{:.2f} m'.format(xdem.spatialstats.nmad(dH_ref))),
                 fontsize=9, fontweight='bold', color='blue', family='monospace', transform=ax.transAxes)
-    
+    else:
+        stats_ref = None
+        
     ax.legend(legend)
     ax.set_xlabel('Elevation difference [m]')
     ax.set_xlim(range)
